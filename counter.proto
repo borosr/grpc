@@ -1,0 +1,19 @@
+syntax = "proto3";
+
+package counter;
+
+// The greeting service definition.
+service Counting {
+  // Sends a greeting
+  rpc Increment (CounterRequest) returns (CounterReply) {}
+}
+
+// The request message containing the user's name.
+message CounterRequest {
+  int32 count = 1;
+}
+
+// The response message containing the greetings
+message CounterReply {
+  int32 count = 1;
+}
