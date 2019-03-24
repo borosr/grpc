@@ -5,6 +5,7 @@ import (
 	"fmt"
 	"log"
 	"net/http"
+	"time"
 
 	counter "github.com/borosr/go_grpc"
 	"google.golang.org/grpc"
@@ -45,6 +46,7 @@ func handleCounterGet(w http.ResponseWriter, r *http.Request) {
 }
 
 func sendToProvider(uri string) []byte {
+	start := time.Now()
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
 		log.Fatalf("did not connect: %v", err)
@@ -53,5 +55,6 @@ func sendToProvider(uri string) []byte {
 	c := counter.NewCountingClient(conn)
 	reply, _ := c.Increment(context.Background(), &counter.CounterRequest{Count: storedCount})
 	storedCount = reply.Count
+	log.Printf("Request duration: %s", time.Since(start))
 	return []byte(fmt.Sprintf("Count is: %d", reply.Count))
 }
