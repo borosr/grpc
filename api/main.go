@@ -4,6 +4,7 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"log/syslog"
 	"net/http"
 	"time"
 
@@ -22,6 +23,15 @@ const (
 
 var storedCount = int32(0)
 
+func init() {
+
+	if logwriter, e := syslog.Dial("udp", "localhost:24224", syslog.LOG_NOTICE, "api_log"); e == nil {
+		log.SetOutput(logwriter)
+	} else {
+		log.Fatal("Syslog init error!")
+	}
+}
+
 func main() {
 	log.Println("API started")
 	r := chi.NewRouter()
@@ -37,15 +47,18 @@ func main() {
 
 func handleCounterGet(w http.ResponseWriter, r *http.Request) {
 	log.Println("First calling")
-	sendToProvider(address1)
+	message := "First calling\n"
+	message += sendToProvider(address1)
+
+	message += "\nSecond calling\n"
 
 	log.Println("Second calling")
-	message := sendToProvider(address2)
+	message += sendToProvider(address2)
 
-	w.Write(message)
+	w.Write([]byte(message))
 }
 
-func sendToProvider(uri string) []byte {
+func sendToProvider(uri string) string {
 	start := time.Now()
 	conn, err := grpc.Dial(uri, grpc.WithInsecure())
 	if err != nil {
@@ -53,8 +66,8 @@ func sendToProvider(uri string) []byte {
 	}
 	defer conn.Close()
 	c := counter.NewCountingClient(conn)
-	reply, _ := c.Increment(context.Background(), &counter.CounterRequest{Count: storedCount})
+	reply, _ := c.Increment(context.Background(), &counter.CounterRequest{})
 	storedCount = reply.Count
 	log.Printf("Request duration: %s", time.Since(start))
-	return []byte(fmt.Sprintf("Count is: %d", reply.Count))
+	return fmt.Sprintf("Count is: %d", reply.Count)
 }

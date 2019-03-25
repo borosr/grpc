@@ -15,6 +15,8 @@ const (
 
 type server struct{}
 
+var storedCount = int32(0)
+
 func main() {
 	log.Println("Provider started")
 	lis, err := net.Listen("tcp", providerPort)
@@ -30,8 +32,9 @@ func main() {
 
 // Increment ....
 func (s *server) Increment(ctx context.Context, in *counter.CounterRequest) (*counter.CounterReply, error) {
-	log.Printf("Counting: %d", in.Count)
+	log.Printf("Counting: %d", storedCount)
+	storedCount++
 	return &counter.CounterReply{
-		Count: in.Count + 1,
+		Count: storedCount,
 	}, nil
 }
