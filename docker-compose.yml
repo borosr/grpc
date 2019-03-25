@@ -3,8 +3,11 @@ version: '3'
 services:
   fluentd:
     image: fluent/fluentd
+    volumes:
+      - "./fluent.conf:/fluentd/log/fluent.conf"
     ports:
       - "24224:24224"
       - "24224:24224/udp"
-    volumes: 
-      - ".:/fluentd/log"
+      - "5140:5140"
+      - "5140:5140/udp"
+    command: fluentd -c /fluentd/log/fluent.conf -v
